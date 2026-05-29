@@ -182,13 +182,31 @@ async function generatePDF(data, out) {
 
   /* ── FOTO ────────────────────────────────────────────────────── */
   const PR = 50, PCX = SW / 2, PCY = 60;
-  const pp = profile.photo ? path.join(process.cwd(), profile.photo) : null;
-  if (pp && fs.existsSync(pp)) {
-    doc.save();
-    doc.circle(PCX, PCY, PR).clip();
-    doc.image(pp, PCX - PR, PCY - PR, { width: PR * 2, height: PR * 2 });
-    doc.restore();
-  } else {
+  let photoOK = false;
+
+  if (profile.photo) {
+    try {
+      let imgSrc;
+      if (profile.photo.startsWith('data:')) {
+        // Base64 guardado en DB → convertir a Buffer para PDFKit
+        const b64 = profile.photo.split(',')[1];
+        if (b64) imgSrc = Buffer.from(b64, 'base64');
+      } else if (!profile.photo.startsWith('/api/')) {
+        // Ruta de archivo local (solo desarrollo)
+        const pp = path.join(process.cwd(), profile.photo);
+        if (fs.existsSync(pp)) imgSrc = pp;
+      }
+      if (imgSrc) {
+        doc.save();
+        doc.circle(PCX, PCY, PR).clip();
+        doc.image(imgSrc, PCX - PR, PCY - PR, { width: PR * 2, height: PR * 2 });
+        doc.restore();
+        photoOK = true;
+      }
+    } catch (_) {}
+  }
+
+  if (!photoOK) {
     doc.circle(PCX, PCY, PR).fill([18, 40, 78]);
     doc.font(f.B).fontSize(22).fillColor(K.cyan)
       .text('JM', PCX - PR, PCY - 14, { width: PR * 2, align: 'center', lineBreak: false });

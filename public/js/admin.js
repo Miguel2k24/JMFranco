@@ -212,12 +212,10 @@ async function loadProfile() {
   if (p.photo) {
     document.getElementById('photoPlaceholder').style.display = 'none';
     const img = document.getElementById('photoPreview');
-    img.src = p.photo;
+    // Si es /api/img/... (lazy URL), la convertimos a URL absoluta para el preview
+    img.src = p.photo.startsWith('/api/') ? p.photo : p.photo;
     img.classList.add('show');
-    // Si es URL externa, mostrarla en el campo
-    if (p.photo.startsWith('http')) {
-      document.getElementById('photoUrl').value = p.photo;
-    }
+    document.getElementById('photoPlaceholder').style.display = 'none';
   }
 }
 
