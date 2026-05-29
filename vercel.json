@@ -3,13 +3,19 @@
   "builds": [
     {
       "src": "server.js",
-      "use": "@vercel/node"
+      "use": "@vercel/node",
+      "config": {
+        "includeFiles": [
+          "public/**",
+          "database/**",
+          "routes/**",
+          "utils/**",
+          "node_modules/sql.js/dist/**"
+        ]
+      }
     }
   ],
   "routes": [
-    {
-      "src": "/(.*)",
-      "dest": "/server.js"
-    }
+    { "src": "/(.*)", "dest": "/server.js" }
   ]
 }

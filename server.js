@@ -43,8 +43,8 @@ app.use(session({
   resave: false,
   saveUninitialized: false,
   cookie: {
-    secure: IS_VERCEL,          // HTTPS en producción
-    sameSite: IS_VERCEL ? 'none' : 'lax',
+    secure: false,
+    sameSite: 'lax',
     maxAge: 24 * 60 * 60 * 1000,
     httpOnly: true,
   }
