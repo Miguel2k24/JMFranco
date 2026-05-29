@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Jose Miguel Franco Bonilla — Portfolio</title>
+  <meta name="description" content="Desarrollador Fullstack | Ing. en Sistemas Computacionales | Santo Domingo, RD">
+  <link rel="stylesheet" href="/css/styles.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>👨‍💻</text></svg>">
+</head>
+<body>
+
+<!-- LOADING SCREEN -->
+<div class="loading-screen" id="loading">
+  <div class="loading-logo">JMFB</div>
+  <div class="loading-bar-wrap"><div class="loading-bar"></div></div>
+</div>
+
+<!-- NAVBAR -->
+<nav class="navbar" id="navbar">
+  <a href="#hero" class="nav-logo">JM<span>Franco</span></a>
+  <ul class="nav-links" id="navLinks">
+    <li><a href="#about">Sobre Mí</a></li>
+    <li><a href="#skills">Habilidades</a></li>
+    <li><a href="#experience">Experiencia</a></li>
+    <li><a href="#education">Educación</a></li>
+    <li><a href="#projects">Proyectos</a></li>
+    <li><a href="#certifications">Certificaciones</a></li>
+    <li><a href="#contact">Contacto</a></li>
+  </ul>
+  <button class="nav-hamburger" id="hamburger" aria-label="Menú">
+    <span></span><span></span><span></span>
+  </button>
+</nav>
+
+<!-- HERO -->
+<section class="hero" id="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-particles" id="heroParticles"></div>
+  <div class="hero-content">
+    <div class="hero-text">
+      <div class="hero-badge">Disponible para proyectos</div>
+      <h1 class="hero-name">
+        <span class="first" id="heroFirst">Jose Miguel</span><br>
+        <span class="last" id="heroLast">Franco Bonilla</span>
+      </h1>
+      <p class="hero-title" id="heroTitle">Ing. en Sistemas Computacionales · Desarrollador Fullstack · Soporte Técnico</p>
+      <div class="hero-cta">
+        <a href="#projects" class="btn-primary">Ver Proyectos →</a>
+        <a href="#contact" class="btn-outline">Contactarme</a>
+      </div>
+      <div class="hero-stats" id="heroStats">
+        <div class="stat">
+          <div class="stat-number" id="statProjects">5</div>
+          <div class="stat-label">Proyectos</div>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat">
+          <div class="stat-number" id="statSkills">10+</div>
+          <div class="stat-label">Tecnologías</div>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat">
+          <div class="stat-number">2+</div>
+          <div class="stat-label">Años Exp.</div>
+        </div>
+      </div>
+    </div>
+    <div class="hero-photo-container">
+      <div class="hero-photo-ring">
+        <div id="heroPhotoWrap">
+          <div class="hero-photo-placeholder"><span>JM</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ABOUT -->
+<section id="about">
+  <div class="section-header fade-up">
+    <div class="section-label">Sobre Mí</div>
+    <h2 class="section-title">¿Quién soy <span>yo?</span></h2>
+    <div class="section-line"></div>
+  </div>
+  <div class="about-grid">
+    <div class="about-photo-wrap fade-up">
+      <div id="aboutPhotoWrap">
+        <div class="about-photo-placeholder"><span>JM</span></div>
+      </div>
+      <div class="about-badge" id="aboutBadge">✦ Fullstack Dev</div>
+    </div>
+    <div class="fade-up delay-2">
+      <p class="about-bio" id="aboutBio">Cargando...</p>
+      <div class="about-details" id="aboutDetails"></div>
+      <div style="display:flex;gap:1rem;flex-wrap:wrap;">
+        <a href="#contact" class="btn-primary" style="font-size:0.85rem;padding:10px 22px;">Contáctame</a>
+        <a href="#projects" class="btn-outline" style="font-size:0.85rem;padding:10px 22px;">Mis proyectos</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SKILLS -->
+<section id="skills">
+  <div class="section-header fade-up">
+    <div class="section-label">Tecnologías</div>
+    <h2 class="section-title">Mis <span>Habilidades</span></h2>
+    <div class="section-line"></div>
+  </div>
+  <div class="skills-grid fade-up" id="skillsContainer">
+    <p style="text-align:center;color:var(--text-muted);">Cargando habilidades...</p>
+  </div>
+</section>
+
+<!-- EXPERIENCE -->
+<section id="experience">
+  <div class="section-header fade-up">
+    <div class="section-label">Trayectoria</div>
+    <h2 class="section-title">Experiencia <span>Laboral</span></h2>
+    <div class="section-line"></div>
+  </div>
+  <div class="timeline fade-up" id="experienceContainer">
+    <p style="text-align:center;color:var(--text-muted);padding:2rem;">Cargando...</p>
+  </div>
+</section>
+
+<!-- EDUCATION -->
+<section id="education">
+  <div class="section-header fade-up">
+    <div class="section-label">Formación</div>
+    <h2 class="section-title">Educación <span>Académica</span></h2>
+    <div class="section-line"></div>
+  </div>
+  <div class="edu-grid fade-up" id="educationContainer">
+    <p style="text-align:center;color:var(--text-muted);">Cargando...</p>
+  </div>
+</section>
+
+<!-- PROJECTS -->
+<section id="projects">
+  <div class="section-header fade-up">
+    <div class="section-label">Portafolio</div>
+    <h2 class="section-title">Mis <span>Proyectos</span></h2>
+    <div class="section-line"></div>
+  </div>
+  <div class="projects-filter fade-up">
+    <button class="filter-btn active" data-filter="all">Todos</button>
+    <button class="filter-btn" data-filter="production">En Producción</button>
+    <button class="filter-btn" data-filter="other">Otros</button>
+  </div>
+  <div class="projects-grid fade-up" id="projectsContainer">
+    <p style="text-align:center;color:var(--text-muted);grid-column:1/-1;">Cargando proyectos...</p>
+  </div>
+</section>
+
+<!-- CERTIFICATIONS -->
+<section id="certifications">
+  <div class="section-header fade-up">
+    <div class="section-label">Logros</div>
+    <h2 class="section-title">Mis <span>Certificaciones</span></h2>
+    <div class="section-line"></div>
+  </div>
+  <div class="certs-grid fade-up" id="certsContainer">
+    <p class="certs-empty" style="grid-column:1/-1;">No hay certificaciones visibles aún.</p>
+  </div>
+</section>
+
+<!-- REFERENCES -->
+<section id="references">
+  <div class="section-header fade-up">
+    <div class="section-label">Referencias</div>
+    <h2 class="section-title">Mis <span>Referencias</span></h2>
+    <div class="section-line"></div>
+  </div>
+  <div class="refs-container fade-up" id="refsContainer">
+    <div>
+      <div class="refs-group-title">Personales</div>
+      <div id="refsPersonal"></div>
+    </div>
+    <div>
+      <div class="refs-group-title">Laborales</div>
+      <div id="refsLaboral"></div>
+    </div>
+  </div>
+</section>
+
+<!-- CONTACT -->
+<section id="contact">
+  <div class="section-header fade-up">
+    <div class="section-label">Hablemos</div>
+    <h2 class="section-title">¿Trabajamos <span>juntos?</span></h2>
+    <div class="section-line"></div>
+  </div>
+  <div class="contact-grid fade-up">
+    <p class="contact-intro">Estoy disponible para oportunidades freelance, colaboraciones o posiciones de tiempo completo. ¡No dudes en contactarme!</p>
+    <div class="contact-links" id="contactLinks"></div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <p class="footer-copy">© 2024 <span id="footerName">Jose Miguel Franco Bonilla</span>. Hecho con pasión desde Santo Domingo, RD.</p>
+  <a href="/admin" class="footer-admin-btn" title="Panel Administrativo">⚙</a>
+</footer>
+
+<!-- CERT LIGHTBOX -->
+<div class="cert-lightbox" id="certLightbox">
+  <button class="cert-lightbox-close" id="lightboxClose">✕</button>
+  <img id="lightboxImg" src="" alt="Certificación">
+</div>
+
+<script src="/js/main.js"></script>
+</body>
+</html>

@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Panel Admin — Portfolio JMFB</title>
+  <link rel="stylesheet" href="/css/admin.css">
+</head>
+<body>
+
+<!-- LOGIN -->
+<div class="login-wrap" id="loginWrap">
+  <div class="login-card">
+    <div class="login-logo">
+      <h1>Panel <span>Admin</span></h1>
+      <p>Portfolio de Jose Miguel Franco Bonilla</p>
+    </div>
+    <div class="login-error" id="loginError">Credenciales incorrectas</div>
+    <form id="loginForm">
+      <div class="form-group" style="margin-bottom:1rem;">
+        <label>Usuario</label>
+        <input type="text" id="loginUser" value="admin" autocomplete="username">
+      </div>
+      <div class="form-group" style="margin-bottom:1.5rem;">
+        <label>Contraseña</label>
+        <input type="password" id="loginPass" autocomplete="current-password">
+      </div>
+      <button type="submit" class="btn btn-blue" style="width:100%;justify-content:center;padding:11px;">Ingresar →</button>
+    </form>
+    <p style="text-align:center;margin-top:1.25rem;font-size:0.78rem;color:var(--muted);">
+      <a href="/" style="color:var(--blue);">← Ver Portfolio</a>
+    </p>
+  </div>
+</div>
+
+<!-- ADMIN LAYOUT -->
+<div class="admin-layout" id="adminLayout" style="display:none;">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-logo">JM<span>Franco</span> Admin</div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-item active" data-panel="dashboard"><span class="nav-item-icon">🏠</span> Dashboard</div>
+      <div class="nav-item" data-panel="profile"><span class="nav-item-icon">👤</span> Perfil</div>
+      <div class="nav-item" data-panel="skills"><span class="nav-item-icon">⚡</span> Habilidades</div>
+      <div class="nav-item" data-panel="experience"><span class="nav-item-icon">💼</span> Experiencia</div>
+      <div class="nav-item" data-panel="education"><span class="nav-item-icon">🎓</span> Educación</div>
+      <div class="nav-item" data-panel="projects"><span class="nav-item-icon">🚀</span> Proyectos</div>
+      <div class="nav-item" data-panel="certifications"><span class="nav-item-icon">📜</span> Certificaciones</div>
+      <div class="nav-item" data-panel="references"><span class="nav-item-icon">👥</span> Referencias</div>
+      <div class="nav-item" data-panel="pdf"><span class="nav-item-icon">📄</span> Generar PDF</div>
+      <div class="nav-item" data-panel="security"><span class="nav-item-icon">🔐</span> Seguridad</div>
+    </nav>
+    <div class="sidebar-footer">
+      <button class="logout-btn" id="logoutBtn">🚪 Cerrar sesión</button>
+    </div>
+  </aside>
+
+  <!-- Overlay para cerrar sidebar en móvil -->
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+  <!-- MAIN -->
+  <div class="admin-main">
+    <header class="admin-topbar">
+      <div style="display:flex;align-items:center;gap:0.75rem;">
+        <!-- Botón hamburger móvil -->
+        <button class="topbar-menu-btn" id="mobileMenuBtn">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="3" y1="6" x2="21" y2="6"/>
+            <line x1="3" y1="12" x2="21" y2="12"/>
+            <line x1="3" y1="18" x2="21" y2="18"/>
+          </svg>
+        </button>
+        <div>
+          <div class="topbar-title" id="topbarTitle">Dashboard</div>
+          <div class="topbar-subtitle">Panel de administración del portfolio</div>
+        </div>
+      </div>
+      <div class="topbar-actions">
+        <a href="/" target="_blank" class="view-portfolio-btn">🌐 Ver Portfolio</a>
+      </div>
+    </header>
+
+    <div class="admin-content">
+
+      <!-- ── DASHBOARD ── -->
+      <div class="panel-section active" id="panel-dashboard">
+        <div class="stats-grid" id="dashStats"></div>
+        <div style="margin-bottom:1rem;font-size:0.82rem;color:var(--text2);font-weight:600;text-transform:uppercase;letter-spacing:0.08em;">Acceso Rápido</div>
+        <div class="dashboard-links">
+          <div class="dash-link-card" onclick="switchPanel('profile')"><div class="dash-link-icon">👤</div><div class="dash-link-title">Editar Perfil</div><div class="dash-link-desc">Foto, bio, contacto</div></div>
+          <div class="dash-link-card" onclick="switchPanel('projects')"><div class="dash-link-icon">🚀</div><div class="dash-link-title">Proyectos</div><div class="dash-link-desc">Agregar / editar proyectos</div></div>
+          <div class="dash-link-card" onclick="switchPanel('certifications')"><div class="dash-link-icon">📜</div><div class="dash-link-title">Certificaciones</div><div class="dash-link-desc">Subir y gestionar certs</div></div>
+          <div class="dash-link-card" onclick="switchPanel('pdf')"><div class="dash-link-icon">📄</div><div class="dash-link-title">Generar CV PDF</div><div class="dash-link-desc">Descargar curriculum</div></div>
+          <div class="dash-link-card" onclick="switchPanel('skills')"><div class="dash-link-icon">⚡</div><div class="dash-link-title">Habilidades</div><div class="dash-link-desc">Gestionar tecnologías</div></div>
+          <div class="dash-link-card" onclick="switchPanel('experience')"><div class="dash-link-icon">💼</div><div class="dash-link-title">Experiencia</div><div class="dash-link-desc">Historial laboral</div></div>
+        </div>
+      </div>
+
+      <!-- ── PERFIL ── -->
+      <div class="panel-section" id="panel-profile">
+        <div class="section-hdr">
+          <div><h2>Información de Perfil</h2><p>Edita tu información personal y foto de perfil</p></div>
+          <button class="btn btn-blue" onclick="saveProfile()">💾 Guardar cambios</button>
+        </div>
+        <div style="display:grid;grid-template-columns:auto 1fr;gap:1.5rem;align-items:start;">
+          <div style="text-align:center;">
+            <div class="photo-preview-wrap">
+              <div class="photo-placeholder" id="photoPlaceholder">👤</div>
+              <img class="photo-preview" id="photoPreview" src="" alt="Foto">
+            </div>
+            <div class="input-file-wrap" style="margin-top:0.75rem;padding:0.75rem;">
+              <label for="photoFile">📷 Cambiar foto</label>
+              <input type="file" id="photoFile" accept="image/*" onchange="previewPhoto(this)">
+              <div class="file-name" id="photoFileName"></div>
+            </div>
+            <button class="btn btn-blue" style="margin-top:0.5rem;width:100%;justify-content:center;" onclick="uploadPhoto()">Subir foto</button>
+          </div>
+          <form id="profileForm">
+            <div class="form-grid" style="margin-bottom:1rem;">
+              <div class="form-group full"><label>Nombre Completo</label><input type="text" id="p_name" placeholder="Jose Miguel Franco Bonilla"></div>
+              <div class="form-group full"><label>Título Profesional</label><input type="text" id="p_title" placeholder="Desarrollador Fullstack · ..."></div>
+              <div class="form-group full"><label>Biografía / Perfil Profesional</label><textarea id="p_bio" rows="4" placeholder="Escribe tu perfil profesional..."></textarea></div>
+              <div class="form-group"><label>Teléfono</label><input type="tel" id="p_phone" placeholder="+1 (809) xxx-xxxx"></div>
+              <div class="form-group"><label>WhatsApp</label><input type="tel" id="p_whatsapp" placeholder="+1 (809) xxx-xxxx"></div>
+              <div class="form-group full"><label>Email</label><input type="email" id="p_email" placeholder="tu@email.com"></div>
+              <div class="form-group"><label>Ubicación</label><input type="text" id="p_location" placeholder="Santo Domingo, RD"></div>
+              <div class="form-group"><label>LinkedIn</label><input type="text" id="p_linkedin" placeholder="linkedin.com/in/usuario"></div>
+              <div class="form-group"><label>GitHub</label><input type="text" id="p_github" placeholder="github.com/usuario"></div>
+              <div class="form-group"><label>Portfolio URL</label><input type="url" id="p_portfolio_url" placeholder="https://..."></div>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- ── HABILIDADES ── -->
+      <div class="panel-section" id="panel-skills">
+        <div class="section-hdr">
+          <div><h2>Habilidades / Tecnologías</h2><p>Gestiona las tecnologías que manejas</p></div>
+          <button class="btn btn-blue" onclick="openModal('skillModal')">+ Agregar</button>
+        </div>
+        <div class="item-list" id="skillsList"></div>
+      </div>
+
+      <!-- ── EXPERIENCIA ── -->
+      <div class="panel-section" id="panel-experience">
+        <div class="section-hdr">
+          <div><h2>Experiencia Laboral</h2><p>Gestiona tu historial de trabajo</p></div>
+          <button class="btn btn-blue" onclick="openExpModal()">+ Agregar</button>
+        </div>
+        <div class="item-list" id="expList"></div>
+      </div>
+
+      <!-- ── EDUCACIÓN ── -->
+      <div class="panel-section" id="panel-education">
+        <div class="section-hdr">
+          <div><h2>Formación Académica</h2><p>Gestiona tu educación y cursos</p></div>
+          <button class="btn btn-blue" onclick="openEduModal()">+ Agregar</button>
+        </div>
+        <div class="item-list" id="eduList"></div>
+      </div>
+
+      <!-- ── PROYECTOS ── -->
+      <div class="panel-section" id="panel-projects">
+        <div class="section-hdr">
+          <div><h2>Proyectos</h2><p>Gestiona tus proyectos del portafolio</p></div>
+          <button class="btn btn-blue" onclick="openProjModal()">+ Agregar Proyecto</button>
+        </div>
+        <div class="item-list" id="projList"></div>
+      </div>
+
+      <!-- ── CERTIFICACIONES ── -->
+      <div class="panel-section" id="panel-certifications">
+        <div class="section-hdr">
+          <div><h2>Certificaciones</h2><p>Sube y gestiona tus certificados</p></div>
+          <button class="btn btn-blue" onclick="openCertModal()">+ Subir Certificación</button>
+        </div>
+        <div class="item-list" id="certList"></div>
+      </div>
+
+      <!-- ── REFERENCIAS ── -->
+      <div class="panel-section" id="panel-references">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;">
+          <div>
+            <div class="section-hdr">
+              <div><h2>Refs. Personales</h2></div>
+              <button class="btn btn-blue" style="font-size:0.75rem;padding:6px 12px;" onclick="openRefModal('personal')">+ Agregar</button>
+            </div>
+            <div class="item-list" id="refsPersonalList"></div>
+          </div>
+          <div>
+            <div class="section-hdr">
+              <div><h2>Refs. Laborales</h2></div>
+              <button class="btn btn-blue" style="font-size:0.75rem;padding:6px 12px;" onclick="openRefModal('laboral')">+ Agregar</button>
+            </div>
+            <div class="item-list" id="refsLaboralList"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── PDF ── -->
+      <div class="panel-section" id="panel-pdf">
+        <div class="section-hdr">
+          <div><h2>Generar Curriculum PDF</h2><p>Descarga tu CV en formato A4 listo para imprimir</p></div>
+        </div>
+        <div class="pdf-options">
+          <h3>📋 Opciones del PDF</h3>
+          <div style="display:flex;flex-direction:column;gap:0.75rem;">
+            <div class="checkbox-group">
+              <input type="checkbox" id="pdfIncludeCerts" checked>
+              <label for="pdfIncludeCerts">Incluir certificaciones visibles como páginas adicionales</label>
+            </div>
+          </div>
+          <div class="pdf-preview-info">
+            <strong>El PDF incluirá:</strong><br>
+            ✦ Sidebar con foto, datos de contacto, habilidades y referencias personales<br>
+            ✦ Perfil profesional, experiencia laboral y formación académica<br>
+            ✦ Proyectos en producción y referencias laborales<br>
+            ✦ Si activado: cada certificación visible en su propia página A4
+          </div>
+        </div>
+        <button class="btn btn-blue" style="font-size:0.95rem;padding:12px 28px;" onclick="generatePDF()">
+          📄 Descargar CV en PDF
+        </button>
+      </div>
+
+      <!-- ── SEGURIDAD ── -->
+      <div class="panel-section" id="panel-security">
+        <div class="section-hdr">
+          <div><h2>Seguridad</h2><p>Cambia tu contraseña de acceso</p></div>
+        </div>
+        <div style="max-width:400px;">
+          <div class="pdf-options">
+            <h3>🔐 Cambiar Contraseña</h3>
+            <div style="display:flex;flex-direction:column;gap:1rem;margin-top:1rem;">
+              <div class="form-group"><label>Contraseña Actual</label><input type="password" id="currPass"></div>
+              <div class="form-group"><label>Nueva Contraseña</label><input type="password" id="newPass"></div>
+              <div class="form-group"><label>Confirmar Nueva</label><input type="password" id="confPass"></div>
+              <button class="btn btn-blue" onclick="changePassword()">Actualizar contraseña</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /admin-content -->
+  </div><!-- /admin-main -->
+</div><!-- /admin-layout -->
+
+<!-- ══ MODALS ══ -->
+
+<!-- Skill Modal -->
+<div class="modal-overlay" id="skillModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="skillModalTitle">Agregar Habilidad</div>
+      <button class="modal-close" onclick="closeModal('skillModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="skill_id">
+      <div class="form-grid">
+        <div class="form-group"><label>Nombre</label><input type="text" id="skill_name" placeholder="JavaScript"></div>
+        <div class="form-group"><label>Categoría</label>
+          <select id="skill_category">
+            <option>Frontend</option><option>Backend</option><option>Base de Datos</option>
+            <option>DevOps</option><option>Herramientas</option><option>Otro</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('skillModal')">Cancelar</button>
+      <button class="btn btn-blue" onclick="saveSkill()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Experience Modal -->
+<div class="modal-overlay" id="expModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="expModalTitle">Agregar Experiencia</div>
+      <button class="modal-close" onclick="closeModal('expModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="exp_id">
+      <div class="form-grid" style="margin-bottom:1rem;">
+        <div class="form-group full"><label>Cargo / Título</label><input type="text" id="exp_title" placeholder="Desarrollador Fullstack"></div>
+        <div class="form-group"><label>Empresa</label><input type="text" id="exp_company" placeholder="Empresa S.A."></div>
+        <div class="form-group"><label>URL Empresa (opcional)</label><input type="url" id="exp_company_url" placeholder="https://..."></div>
+        <div class="form-group"><label>Fecha Inicio</label><input type="text" id="exp_start_date" placeholder="MM/AAAA o descripción"></div>
+        <div class="form-group"><label>Fecha Fin</label><input type="text" id="exp_end_date" placeholder="MM/AAAA"></div>
+        <div class="form-group full">
+          <div class="checkbox-group">
+            <input type="checkbox" id="exp_is_current">
+            <label for="exp_is_current">Trabajo actual (en curso)</label>
+          </div>
+        </div>
+        <div class="form-group full"><label>Descripción</label><textarea id="exp_description" rows="3" placeholder="Describe tus responsabilidades y logros..."></textarea></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('expModal')">Cancelar</button>
+      <button class="btn btn-blue" onclick="saveExp()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Education Modal -->
+<div class="modal-overlay" id="eduModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="eduModalTitle">Agregar Educación</div>
+      <button class="modal-close" onclick="closeModal('eduModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="edu_id">
+      <div class="form-grid">
+        <div class="form-group full"><label>Título / Grado</label><input type="text" id="edu_degree" placeholder="Ing. en Sistemas Computacionales"></div>
+        <div class="form-group"><label>Institución</label><input type="text" id="edu_institution" placeholder="Universidad UTESA"></div>
+        <div class="form-group"><label>Año</label><input type="text" id="edu_year" placeholder="2024 o rango"></div>
+        <div class="form-group">
+          <label>Estado</label>
+          <select id="edu_status">
+            <option>Certificado</option><option>En curso</option><option>Completado</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('eduModal')">Cancelar</button>
+      <button class="btn btn-blue" onclick="saveEdu()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Project Modal -->
+<div class="modal-overlay" id="projModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="projModalTitle">Agregar Proyecto</div>
+      <button class="modal-close" onclick="closeModal('projModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="proj_id">
+      <div class="form-grid" style="margin-bottom:1rem;">
+        <div class="form-group full"><label>Nombre del Proyecto</label><input type="text" id="proj_name" placeholder="Mi Proyecto"></div>
+        <div class="form-group full"><label>Descripción</label><textarea id="proj_description" rows="2" placeholder="Breve descripción del proyecto..."></textarea></div>
+        <div class="form-group full"><label>URL del Proyecto</label><input type="url" id="proj_url" placeholder="https://mi-proyecto.vercel.app"></div>
+        <div class="form-group full"><label>Tags (separados por coma)</label><input type="text" id="proj_tags" placeholder="React, Node.js, MongoDB"></div>
+        <div class="form-group full">
+          <div class="checkbox-group">
+            <input type="checkbox" id="proj_is_production">
+            <label for="proj_is_production">Proyecto en producción (en línea y siendo usado)</label>
+          </div>
+        </div>
+        <div class="form-group full">
+          <label>Imagen del proyecto (opcional)</label>
+          <div class="input-file-wrap">
+            <label for="proj_image">🖼️ Seleccionar imagen</label>
+            <input type="file" id="proj_image" accept="image/*" onchange="showFileName(this,'proj_img_name')">
+            <div class="file-name" id="proj_img_name"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('projModal')">Cancelar</button>
+      <button class="btn btn-blue" onclick="saveProject()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Certification Modal -->
+<div class="modal-overlay" id="certModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="certModalTitle">Subir Certificación</div>
+      <button class="modal-close" onclick="closeModal('certModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="cert_id">
+      <div class="form-grid">
+        <div class="form-group full"><label>Nombre del Certificado</label><input type="text" id="cert_name" placeholder="Desarrollador Fullstack Intermedio"></div>
+        <div class="form-group full"><label>Institución</label><input type="text" id="cert_institution" placeholder="Talento Digital"></div>
+        <div class="form-group full" id="certFileGroup">
+          <label>Archivo (imagen o PDF)</label>
+          <div class="input-file-wrap">
+            <label for="cert_file">📎 Seleccionar archivo</label>
+            <input type="file" id="cert_file" accept="image/*,.pdf" onchange="showFileName(this,'cert_file_name')">
+            <div class="file-name" id="cert_file_name"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('certModal')">Cancelar</button>
+      <button class="btn btn-blue" onclick="saveCert()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Reference Modal -->
+<div class="modal-overlay" id="refModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="refModalTitle">Agregar Referencia</div>
+      <button class="modal-close" onclick="closeModal('refModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="ref_id">
+      <input type="hidden" id="ref_type">
+      <div class="form-grid">
+        <div class="form-group full"><label>Nombre</label><input type="text" id="ref_name" placeholder="Nombre completo"></div>
+        <div class="form-group"><label>Teléfono</label><input type="tel" id="ref_phone" placeholder="(809) xxx-xxxx"></div>
+        <div class="form-group" id="refCompanyGroup"><label>Empresa / Relación</label><input type="text" id="ref_extra" placeholder="Empresa o relación"></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('refModal')">Cancelar</button>
+      <button class="btn btn-blue" onclick="saveRef()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST CONTAINER -->
+<div class="toast-container" id="toastContainer"></div>
+
+<script src="/js/admin.js"></script>
+</body>
+</html>

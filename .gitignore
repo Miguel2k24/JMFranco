@@ -1,0 +1,11 @@
+node_modules/
+.env
+.env.local
+.vercel
+*.log
+.DS_Store
+Thumbs.db
+
+# No ignoramos database/portfolio.db para que el deploy de Vercel tenga los datos
+# uploads/ se ignora porque en Vercel los archivos van a /tmp (efímero)
+uploads/
