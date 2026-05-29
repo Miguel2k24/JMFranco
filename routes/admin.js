@@ -1,50 +1,41 @@
 const express = require('express');
-const router = express.Router();
-const multer = require('multer');
-const path = require('path');
-const bcrypt = require('bcryptjs');
+const router  = express.Router();
+const bcrypt  = require('bcryptjs');
+const jwt     = require('jsonwebtoken');
 
-// Auth middleware
+const JWT_SECRET = process.env.JWT_SECRET || 'portfolio_jwt_jmfranco_2024_xK9mL';
+const JWT_OPTS   = { expiresIn: '7d' };
+
+// ── AUTH MIDDLEWARE (JWT — stateless, funciona en Vercel) ─────────
 const auth = (req, res, next) => {
-  if (req.session && req.session.adminLoggedIn) return next();
-  res.status(401).json({ success: false, error: 'No autorizado' });
+  const header = req.headers['authorization'] || '';
+  const token  = header.startsWith('Bearer ') ? header.slice(7) : null;
+  if (!token) return res.status(401).json({ success: false, error: 'No autorizado' });
+  try { jwt.verify(token, JWT_SECRET); next(); }
+  catch (_) { res.status(401).json({ success: false, error: 'Token inválido o expirado' }); }
 };
 
-// Multer storage — usa uploadBase de app.locals (soporta /tmp en Vercel)
-function makeStorage(subdir, prefix) {
-  return multer.diskStorage({
-    destination(req, file, cb) {
-      const base = req.app.locals.uploadBase || 'uploads';
-      cb(null, path.join(base, subdir));
-    },
-    filename: (req, file, cb) => cb(null, `${prefix}-${Date.now()}${path.extname(file.originalname)}`)
-  });
-}
-
-const uploadPhoto   = multer({ storage: makeStorage('photos',         'profile'), limits: { fileSize: 5  * 1024 * 1024 } });
-const uploadProject = multer({ storage: makeStorage('projects',       'project'), limits: { fileSize: 10 * 1024 * 1024 } });
-const uploadCert    = multer({ storage: makeStorage('certifications', 'cert'),    limits: { fileSize: 20 * 1024 * 1024 } });
-
-// ── AUTH ──────────────────────────────────────────────────────────
+// ── AUTH ROUTES ───────────────────────────────────────────────────
 router.post('/login', (req, res) => {
   const db = req.app.locals.db;
   const { username, password } = req.body;
   const admin = db.prepare('SELECT * FROM admin_user WHERE username = ?').get(username);
   if (admin && bcrypt.compareSync(password, admin.password)) {
-    req.session.adminLoggedIn = true;
-    res.json({ success: true });
+    const token = jwt.sign({ admin: true, user: username }, JWT_SECRET, JWT_OPTS);
+    res.json({ success: true, token });
   } else {
     res.status(401).json({ success: false, error: 'Credenciales incorrectas' });
   }
 });
 
-router.post('/logout', (req, res) => {
-  req.session.destroy();
-  res.json({ success: true });
-});
+router.post('/logout', (req, res) => res.json({ success: true }));
 
 router.get('/check', (req, res) => {
-  res.json({ authenticated: !!(req.session && req.session.adminLoggedIn) });
+  const header = req.headers['authorization'] || '';
+  const token  = header.startsWith('Bearer ') ? header.slice(7) : null;
+  if (!token) return res.json({ authenticated: false });
+  try { jwt.verify(token, JWT_SECRET); res.json({ authenticated: true }); }
+  catch (_) { res.json({ authenticated: false }); }
 });
 
 // ── PROFILE ───────────────────────────────────────────────────────

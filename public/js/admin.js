@@ -2,21 +2,77 @@
    ADMIN PANEL JS — Jose Miguel Portfolio
 ══════════════════════════════════════════ */
 
+// ── JWT TOKEN (localStorage — funciona en Vercel serverless) ──────
+const TOKEN_KEY = 'jmf_admin_token';
+const getToken  = () => localStorage.getItem(TOKEN_KEY);
+const setToken  = t  => localStorage.setItem(TOKEN_KEY, t);
+const clearToken = () => localStorage.removeItem(TOKEN_KEY);
+
+// ── API HELPER (incluye JWT en cada request) ──────────────────────
+const api = {
+  _headers(extra = {}) {
+    const h = { 'Content-Type': 'application/json', ...extra };
+    const t = getToken();
+    if (t) h['Authorization'] = `Bearer ${t}`;
+    return h;
+  },
+  async get(url) {
+    try { const r = await fetch(url, { headers: this._headers() }); return r.json(); }
+    catch(e) { return { success: false, error: e.message }; }
+  },
+  async post(url, body) {
+    try { const r = await fetch(url, { method: 'POST', headers: this._headers(), body: JSON.stringify(body) }); return r.json(); }
+    catch(e) { return { success: false, error: e.message }; }
+  },
+  async put(url, body) {
+    try { const r = await fetch(url, { method: 'PUT', headers: this._headers(), body: JSON.stringify(body) }); return r.json(); }
+    catch(e) { return { success: false, error: e.message }; }
+  },
+  async delete(url) {
+    try { const r = await fetch(url, { method: 'DELETE', headers: this._headers() }); return r.json(); }
+    catch(e) { return { success: false, error: e.message }; }
+  },
+  async patch(url, body = {}) {
+    try { const r = await fetch(url, { method: 'PATCH', headers: this._headers(), body: JSON.stringify(body) }); return r.json(); }
+    catch(e) { return { success: false, error: e.message }; }
+  },
+  async postForm(url, formData) {
+    // FormData no lleva Content-Type (lo pone el browser solo con boundary)
+    const h = {};
+    const t = getToken();
+    if (t) h['Authorization'] = `Bearer ${t}`;
+    try { const r = await fetch(url, { method: 'POST', headers: h, body: formData }); return r.json(); }
+    catch(e) { return { success: false, error: e.message }; }
+  },
+  async putForm(url, formData) {
+    const h = {};
+    const t = getToken();
+    if (t) h['Authorization'] = `Bearer ${t}`;
+    try { const r = await fetch(url, { method: 'PUT', headers: h, body: formData }); return r.json(); }
+    catch(e) { return { success: false, error: e.message }; }
+  }
+};
+
 // ── INIT ──────────────────────────────────
 document.addEventListener('DOMContentLoaded', async () => {
   setupMobileSidebar();
 
-  const res = await fetch('/api/admin/check');
-  const { authenticated } = await res.json();
-  if (authenticated) showAdmin();
+  // Verificar si hay token válido guardado
+  if (getToken()) {
+    const res = await api.get('/api/admin/check');
+    if (res.authenticated) { showAdmin(); }
+    else clearToken(); // token expirado
+  }
 
   document.getElementById('loginForm').addEventListener('submit', async e => {
     e.preventDefault();
     const username = document.getElementById('loginUser').value;
     const password = document.getElementById('loginPass').value;
     const r = await api.post('/api/admin/login', { username, password });
-    if (r.success) { showAdmin(); }
-    else {
+    if (r.success && r.token) {
+      setToken(r.token);
+      showAdmin();
+    } else {
       const err = document.getElementById('loginError');
       err.textContent = r.error || 'Credenciales incorrectas';
       err.classList.add('show');
@@ -24,8 +80,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   });
 
-  document.getElementById('logoutBtn').addEventListener('click', async () => {
-    await api.post('/api/admin/logout', {});
+  document.getElementById('logoutBtn').addEventListener('click', () => {
+    clearToken();
     location.reload();
   });
 
@@ -40,38 +96,6 @@ function showAdmin() {
   loadDashboard();
   loadProfile();
 }
-
-// ── API HELPER ────────────────────────────
-const api = {
-  async get(url) {
-    try { const r = await fetch(url); return r.json(); }
-    catch(e) { return { success: false, error: e.message }; }
-  },
-  async post(url, body) {
-    try { const r = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }); return r.json(); }
-    catch(e) { return { success: false, error: e.message }; }
-  },
-  async put(url, body) {
-    try { const r = await fetch(url, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }); return r.json(); }
-    catch(e) { return { success: false, error: e.message }; }
-  },
-  async delete(url) {
-    try { const r = await fetch(url, { method: 'DELETE' }); return r.json(); }
-    catch(e) { return { success: false, error: e.message }; }
-  },
-  async patch(url, body = {}) {
-    try { const r = await fetch(url, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }); return r.json(); }
-    catch(e) { return { success: false, error: e.message }; }
-  },
-  async postForm(url, formData) {
-    try { const r = await fetch(url, { method: 'POST', body: formData }); return r.json(); }
-    catch(e) { return { success: false, error: e.message }; }
-  },
-  async putForm(url, formData) {
-    try { const r = await fetch(url, { method: 'PUT', body: formData }); return r.json(); }
-    catch(e) { return { success: false, error: e.message }; }
-  }
-};
 
 // ── TOAST ─────────────────────────────────
 function toast(msg, type = 'success') {
