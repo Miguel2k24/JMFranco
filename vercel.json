@@ -10,7 +10,7 @@
           "database/**",
           "routes/**",
           "utils/**",
-          "node_modules/sql.js/dist/**"
+          "wasm/**"
         ]
       }
     }

@@ -95,7 +95,14 @@ function createInterface(sqljs) {
 
 async function initDB() {
   if (_initialized) return _db.iface;
-  const SQL = await initSqlJs();
+
+  // locateFile indica a sql.js dónde está el binario WASM
+  // Usamos el archivo copiado en /wasm/ para que Vercel lo incluya en el bundle
+  const WASM_PATH = path.join(__dirname, '..', 'wasm', 'sql-wasm.wasm');
+  const SQL = await initSqlJs({
+    locateFile: () => WASM_PATH
+  });
+
   const iface = createInterface(SQL);
   _db.iface = iface;
 
