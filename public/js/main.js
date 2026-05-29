@@ -235,12 +235,16 @@ function renderCertifications(certifications) {
     return;
   }
 
-  container.innerHTML = certifications.map(cert => `
-    <div class="cert-card" onclick="openCertLightbox('${cert.file_path}', '${cert.name}')">
+  container.innerHTML = certifications.map(cert => {
+    // Las certs solo traen id/name/institution/file_type (no file_path por tamaño)
+    // Usamos la ruta lazy /api/img/cert/:id para cargar la imagen
+    const imgSrc = cert.file_type === 'image' ? `/api/img/cert/${cert.id}` : null;
+    return `
+    <div class="cert-card" onclick="openCertLightbox(${cert.id}, '${cert.name}', '${cert.file_type}')">
       <div class="cert-img-wrap">
-        ${cert.file_type === 'image' && cert.file_path
-          ? `<img src="${cert.file_path}" alt="${cert.name}" loading="lazy">`
-          : `<div class="cert-img-placeholder">📜</div>`
+        ${imgSrc
+          ? `<img src="${imgSrc}" alt="${cert.name}" loading="lazy" onerror="this.parentNode.innerHTML='<div class=cert-img-placeholder>📜</div>'">`
+          : `<div class="cert-img-placeholder">📄</div>`
         }
       </div>
       <div class="cert-body">
@@ -248,7 +252,8 @@ function renderCertifications(certifications) {
         ${cert.institution ? `<div class="cert-inst">${cert.institution}</div>` : ''}
       </div>
     </div>
-  `).join('');
+  `;
+  }).join('');
 }
 
 // ── REFERENCES ────────────────────────────
@@ -344,9 +349,9 @@ function setupCertLightbox() {
   document.addEventListener('keydown', e => { if (e.key === 'Escape') lb.classList.remove('active'); });
 }
 
-function openCertLightbox(path, name) {
-  if (!path || !path.match(/\.(jpg|jpeg|png|gif|webp)$/i)) return;
-  document.getElementById('lightboxImg').src = path;
+function openCertLightbox(id, name, fileType) {
+  if (fileType !== 'image') return;
+  document.getElementById('lightboxImg').src = `/api/img/cert/${id}`;
   document.getElementById('lightboxImg').alt = name;
   document.getElementById('certLightbox').classList.add('active');
 }
