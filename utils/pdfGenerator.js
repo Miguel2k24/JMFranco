@@ -405,12 +405,22 @@ async function generatePDF(data, out) {
     }
 
     if (cert.file_type === 'image' && cert.file_path) {
-      const cp = path.join(process.cwd(), cert.file_path);
-      if (fs.existsSync(cp)) {
-        try {
-          doc.image(cp, 25, 62, { fit: [PW - 50, PH - 85], align: 'center', valign: 'center' });
-        } catch (_) {}
-      }
+      try {
+        if (cert.file_path.startsWith('data:')) {
+          // Base64 guardado en DB — convertir a Buffer para PDFKit
+          const b64 = cert.file_path.split(',')[1];
+          if (b64) {
+            const buf = Buffer.from(b64, 'base64');
+            doc.image(buf, 25, 62, { fit: [PW - 50, PH - 85], align: 'center', valign: 'center' });
+          }
+        } else {
+          // Ruta de archivo local (desarrollo)
+          const cp = path.join(process.cwd(), cert.file_path);
+          if (fs.existsSync(cp)) {
+            doc.image(cp, 25, 62, { fit: [PW - 50, PH - 85], align: 'center', valign: 'center' });
+          }
+        }
+      } catch (_) {}
     } else {
       doc.font(f.R).fontSize(13).fillColor(K.gray)
         .text('[Certificado PDF adjunto]', 40, PH / 2,

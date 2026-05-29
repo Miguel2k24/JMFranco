@@ -115,6 +115,40 @@ function showFileName(input, targetId) {
   document.getElementById(targetId).textContent = input.files[0] ? input.files[0].name : '';
 }
 
+// ── IMAGEN A BASE64 (comprimida) ──────────
+// Comprime y convierte una imagen a base64 usando Canvas.
+// Así se puede guardar directamente en la DB sin filesystem.
+function imageToBase64(file, maxPx = 900, quality = 0.82) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = reject;
+    reader.onload = e => {
+      const img = new Image();
+      img.onerror = reject;
+      img.onload = () => {
+        const ratio = Math.min(maxPx / img.width, maxPx / img.height, 1);
+        const canvas = document.createElement('canvas');
+        canvas.width  = Math.round(img.width  * ratio);
+        canvas.height = Math.round(img.height * ratio);
+        canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+        resolve(canvas.toDataURL('image/jpeg', quality));
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+// Para archivos que no son imágenes (PDF) — solo convierte sin comprimir
+function fileToBase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = reject;
+    reader.onload = e => resolve(e.target.result);
+    reader.readAsDataURL(file);
+  });
+}
+
 // ── DASHBOARD ─────────────────────────────
 async function loadDashboard() {
   const r = await api.get('/api/portfolio');
@@ -192,25 +226,20 @@ function previewPhoto(input) {
   reader.readAsDataURL(input.files[0]);
 }
 
-async function savePhotoUrl() {
-  const url = document.getElementById('photoUrl').value.trim();
-  if (!url) { toast('Ingresa una URL de imagen', 'warning'); return; }
-  const r = await api.post('/api/admin/profile/photo-url', { url });
-  if (r.success) {
-    document.getElementById('photoPlaceholder').style.display = 'none';
-    const img = document.getElementById('photoPreview');
-    img.src = url; img.classList.add('show');
-    toast('Foto guardada correctamente');
-  } else toast(r.error || 'Error', 'error');
-}
-
 async function uploadPhoto() {
   const file = document.getElementById('photoFile').files[0];
   if (!file) { toast('Selecciona una foto primero', 'warning'); return; }
-  const fd = new FormData();
-  fd.append('photo', file);
-  const r = await api.postForm('/api/admin/profile/photo', fd);
-  r.success ? toast('Foto actualizada (solo persiste localmente)') : toast(r.error || 'Error al subir foto', 'error');
+  toast('Procesando imagen...', 'success');
+  try {
+    const base64 = await imageToBase64(file, 500, 0.85);
+    const r = await api.post('/api/admin/profile/photo', { data: base64 });
+    if (r.success) {
+      document.getElementById('photoPlaceholder').style.display = 'none';
+      const img = document.getElementById('photoPreview');
+      img.src = base64; img.classList.add('show');
+      toast('Foto guardada en la base de datos');
+    } else toast(r.error || 'Error', 'error');
+  } catch (e) { toast('Error procesando imagen', 'error'); }
 }
 
 // ── SKILLS ────────────────────────────────
@@ -385,9 +414,14 @@ function openProjModal(data = null) {
   document.getElementById('proj_is_production').checked = data ? !!data.is_production : false;
   document.getElementById('proj_img_name').textContent = '';
   document.getElementById('proj_image').value = '';
-  // Precargar URL de imagen si existe
-  const imgUrl = data && data.image && data.image.startsWith('http') ? data.image : '';
-  document.getElementById('proj_image_url').value = imgUrl;
+  document.getElementById('proj_image_url').value =
+    (data && data.image && data.image.startsWith('http')) ? data.image : '';
+  // Mostrar preview si ya tiene imagen
+  const prevEl = document.getElementById('proj_img_preview');
+  if (prevEl) {
+    prevEl.src = (data && data.image) ? data.image : '';
+    prevEl.style.display = (data && data.image) ? 'block' : 'none';
+  }
   document.getElementById('projModalTitle').textContent = data ? 'Editar Proyecto' : 'Agregar Proyecto';
   openModal('projModal');
 }
@@ -396,24 +430,30 @@ function editProject(data) { openProjModal(data); }
 
 async function saveProject() {
   const id = document.getElementById('proj_id').value;
-  const fd = new FormData();
-  fd.append('name', document.getElementById('proj_name').value);
-  fd.append('description', document.getElementById('proj_description').value);
-  fd.append('url', document.getElementById('proj_url').value);
-  fd.append('tags', document.getElementById('proj_tags').value);
-  fd.append('is_production', document.getElementById('proj_is_production').checked ? '1' : '0');
-  fd.append('visible', '1');
-  // URL de imagen externa tiene prioridad sobre archivo
-  const imageUrl = document.getElementById('proj_image_url').value.trim();
-  if (imageUrl) fd.append('image_url', imageUrl);
-  const imgFile = document.getElementById('proj_image').files[0];
-  if (imgFile && !imageUrl) fd.append('image', imgFile);
-
   if (!document.getElementById('proj_name').value) { toast('El nombre es requerido', 'warning'); return; }
 
+  let image = document.getElementById('proj_image_url').value.trim() || undefined;
+  const imgFile = document.getElementById('proj_image').files[0];
+
+  if (imgFile) {
+    toast('Procesando imagen...', 'success');
+    try { image = await imageToBase64(imgFile, 900, 0.8); }
+    catch (e) { toast('Error procesando imagen', 'error'); return; }
+  }
+
+  const body = {
+    name: document.getElementById('proj_name').value,
+    description: document.getElementById('proj_description').value,
+    url: document.getElementById('proj_url').value,
+    tags: document.getElementById('proj_tags').value,
+    is_production: document.getElementById('proj_is_production').checked ? 1 : 0,
+    visible: 1,
+    image
+  };
+
   const r = id
-    ? await api.putForm(`/api/admin/projects/${id}`, fd)
-    : await api.postForm('/api/admin/projects', fd);
+    ? await api.put(`/api/admin/projects/${id}`, body)
+    : await api.post('/api/admin/projects', body);
 
   if (r.success) { closeModal('projModal'); loadProjects(); toast('Proyecto guardado'); }
   else toast(r.error || 'Error', 'error');
@@ -466,24 +506,32 @@ async function toggleCert(id) {
 
 async function saveCert() {
   const id = document.getElementById('cert_id').value;
+  const name = document.getElementById('cert_name').value;
+  const institution = document.getElementById('cert_institution').value;
+
+  if (!name) { toast('El nombre es requerido', 'warning'); return; }
+
   if (!id) {
-    const fd = new FormData();
-    fd.append('name', document.getElementById('cert_name').value);
-    fd.append('institution', document.getElementById('cert_institution').value);
+    // Nueva certificación — convertir archivo a base64 y guardar en DB
     const file = document.getElementById('cert_file').files[0];
     if (!file) { toast('Selecciona un archivo', 'warning'); return; }
-    if (!document.getElementById('cert_name').value) { toast('El nombre es requerido', 'warning'); return; }
-    fd.append('file', file);
-    const r = await api.postForm('/api/admin/certifications', fd);
-    if (r.success) { closeModal('certModal'); loadCerts(); toast('Certificación subida'); }
-    else toast(r.error || 'Error', 'error');
+
+    toast('Procesando archivo...', 'success');
+    try {
+      let file_data, file_type;
+      if (file.type.startsWith('image/')) {
+        file_data = await imageToBase64(file, 1400, 0.88); // alta calidad para certs
+        file_type = 'image';
+      } else {
+        file_data = await fileToBase64(file); // PDF sin comprimir
+        file_type = 'pdf';
+      }
+      const r = await api.post('/api/admin/certifications', { name, institution, file_data, file_type });
+      if (r.success) { closeModal('certModal'); loadCerts(); toast('Certificación guardada en la DB'); }
+      else toast(r.error || 'Error', 'error');
+    } catch (e) { toast('Error procesando archivo', 'error'); }
   } else {
-    const body = {
-      name: document.getElementById('cert_name').value,
-      institution: document.getElementById('cert_institution').value,
-      visible: 1
-    };
-    const r = await api.put(`/api/admin/certifications/${id}`, body);
+    const r = await api.put(`/api/admin/certifications/${id}`, { name, institution, visible: 1 });
     if (r.success) { closeModal('certModal'); loadCerts(); toast('Certificación actualizada'); }
     else toast(r.error || 'Error', 'error');
   }
