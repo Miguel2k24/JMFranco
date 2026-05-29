@@ -190,8 +190,15 @@ router.post('/certifications', auth, (req, res) => {
 
 router.put('/certifications/:id', auth, (req, res) => {
   const db = req.app.locals.db;
-  const { name, institution, visible } = req.body;
-  db.prepare('UPDATE certifications SET name=?,institution=?,visible=? WHERE id=?').run(name, institution, visible ?? 1, req.params.id);
+  const { name, institution, visible, file_data, file_type } = req.body;
+  if (file_data) {
+    // Actualizar imagen también
+    db.prepare('UPDATE certifications SET name=?,institution=?,visible=?,file_path=?,file_type=? WHERE id=?')
+      .run(name, institution, visible ?? 1, file_data, file_type || 'image', req.params.id);
+  } else {
+    db.prepare('UPDATE certifications SET name=?,institution=?,visible=? WHERE id=?')
+      .run(name, institution, visible ?? 1, req.params.id);
+  }
   res.json({ success: true });
 });
 

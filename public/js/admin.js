@@ -489,12 +489,16 @@ async function loadCerts() {
   if (!r.success) return;
   const list = document.getElementById('certList');
   if (!r.data.length) { list.innerHTML = emptyState('📜','No hay certificaciones aún'); return; }
-  list.innerHTML = r.data.map(c => `
+  list.innerHTML = r.data.map(c => {
+    // Miniatura: usa /api/img/cert/:id para no cargar todo el base64 en el listado
+    const thumb = c.file_type === 'image'
+      ? `<img class="img-thumb" src="/api/img/cert/${c.id}" alt="${c.name}" onerror="this.style.display='none'">`
+      : '<div style="width:44px;height:44px;background:var(--card2);border-radius:6px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:1.4rem;">📄</div>';
+    // No incluir file_path en el JSON del onclick (puede ser base64 enorme)
+    const certData = JSON.stringify({ id: c.id, name: c.name, institution: c.institution, file_type: c.file_type, visible: c.visible }).replace(/"/g,'&quot;');
+    return `
     <div class="item-card">
-      ${c.file_type === 'image' && c.file_path
-        ? `<img class="img-thumb" src="${c.file_path}" alt="${c.name}">`
-        : '<div style="width:44px;height:44px;background:var(--card2);border-radius:6px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:1.4rem;">📄</div>'
-      }
+      ${thumb}
       <div class="item-card-info">
         <div class="item-card-title">${c.name}</div>
         <div class="item-card-sub">${c.institution || ''} · ${c.file_type === 'pdf' ? 'PDF' : 'Imagen'}</div>
@@ -502,7 +506,7 @@ async function loadCerts() {
       <span class="item-badge ${c.visible ? 'badge-visible' : 'badge-hidden'}">${c.visible ? 'Visible' : 'Oculto'}</span>
       <div class="item-card-actions">
         <button class="btn btn-cyan" style="font-size:0.72rem;" onclick="toggleCert(${c.id})">👁 Toggle</button>
-        <button class="btn btn-ghost" style="font-size:0.72rem;" onclick="editCert(${JSON.stringify(c).replace(/"/g,'&quot;')})">✏️</button>
+        <button class="btn btn-ghost" style="font-size:0.72rem;" onclick="editCert(${certData})">✏️ Editar</button>
         <button class="btn btn-danger" style="font-size:0.72rem;" onclick="deleteItem('/api/admin/certifications/${c.id}',loadCerts)">🗑️</button>
       </div>
     </div>
@@ -515,7 +519,12 @@ function openCertModal(data = null) {
   document.getElementById('cert_institution').value = data ? (data.institution || '') : '';
   document.getElementById('cert_file_name').textContent = '';
   document.getElementById('cert_file').value = '';
-  document.getElementById('certFileGroup').style.display = data ? 'none' : 'block';
+  // Siempre mostrar el campo de archivo — permite cambiar imagen al editar
+  document.getElementById('certFileGroup').style.display = 'block';
+  const label = data
+    ? (data.file_type === 'image' ? '📷 Cambiar imagen (opcional)' : '📎 Cambiar archivo (opcional)')
+    : '📎 Seleccionar archivo';
+  document.querySelector('#certFileGroup label[for="cert_file"]').textContent = label;
   document.getElementById('certModalTitle').textContent = data ? 'Editar Certificación' : 'Subir Certificación';
   openModal('certModal');
 }
@@ -529,33 +538,39 @@ async function toggleCert(id) {
 }
 
 async function saveCert() {
-  const id = document.getElementById('cert_id').value;
+  const id   = document.getElementById('cert_id').value;
   const name = document.getElementById('cert_name').value;
-  const institution = document.getElementById('cert_institution').value;
+  const inst = document.getElementById('cert_institution').value;
+  const file = document.getElementById('cert_file').files[0];
 
   if (!name) { toast('El nombre es requerido', 'warning'); return; }
+  if (!id && !file) { toast('Selecciona un archivo', 'warning'); return; }
 
-  if (!id) {
-    // Nueva certificación — convertir archivo a base64 y guardar en DB
-    const file = document.getElementById('cert_file').files[0];
-    if (!file) { toast('Selecciona un archivo', 'warning'); return; }
-
+  // Si hay un archivo seleccionado → convertir a base64 (nueva o cambio de imagen)
+  if (file) {
     toast('Procesando archivo...', 'success');
     try {
       let file_data, file_type;
       if (file.type.startsWith('image/')) {
-        file_data = await imageToBase64(file, 1400, 0.88); // alta calidad para certs
+        file_data = await imageToBase64(file, 1400, 0.88);
         file_type = 'image';
       } else {
-        file_data = await fileToBase64(file); // PDF sin comprimir
+        file_data = await fileToBase64(file);
         file_type = 'pdf';
       }
-      const r = await api.post('/api/admin/certifications', { name, institution, file_data, file_type });
-      if (r.success) { closeModal('certModal'); loadCerts(); toast('Certificación guardada en la DB'); }
-      else toast(r.error || 'Error', 'error');
+      if (id) {
+        const r = await api.put(`/api/admin/certifications/${id}`, { name, institution: inst, visible: 1, file_data, file_type });
+        if (r.success) { closeModal('certModal'); loadCerts(); toast('Certificación actualizada con nueva imagen'); }
+        else toast(r.error || 'Error', 'error');
+      } else {
+        const r = await api.post('/api/admin/certifications', { name, institution: inst, file_data, file_type });
+        if (r.success) { closeModal('certModal'); loadCerts(); toast('Certificación guardada en la DB'); }
+        else toast(r.error || 'Error', 'error');
+      }
     } catch (e) { toast('Error procesando archivo', 'error'); }
   } else {
-    const r = await api.put(`/api/admin/certifications/${id}`, { name, institution, visible: 1 });
+    // Solo actualizar nombre/institución
+    const r = await api.put(`/api/admin/certifications/${id}`, { name, institution: inst, visible: 1 });
     if (r.success) { closeModal('certModal'); loadCerts(); toast('Certificación actualizada'); }
     else toast(r.error || 'Error', 'error');
   }
