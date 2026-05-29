@@ -664,21 +664,38 @@ async function generatePDF() {
   } catch(e) { toast('Error al generar PDF: ' + e.message, 'error'); }
 }
 
-// ── PASSWORD ──────────────────────────────
+// ── CREDENCIALES ──────────────────────────
 async function changePassword() {
-  const curr = document.getElementById('currPass').value;
-  const newP = document.getElementById('newPass').value;
-  const conf = document.getElementById('confPass').value;
-  if (!curr || !newP || !conf) { toast('Completa todos los campos', 'warning'); return; }
-  if (newP !== conf) { toast('Las contraseñas no coinciden', 'warning'); return; }
-  if (newP.length < 6) { toast('La contraseña debe tener mínimo 6 caracteres', 'warning'); return; }
-  const r = await api.put('/api/admin/change-password', { currentPassword: curr, newPassword: newP });
+  const curr    = document.getElementById('currPass').value;
+  const newUser = document.getElementById('newUsername') ? document.getElementById('newUsername').value.trim() : '';
+  const newP    = document.getElementById('newPass').value;
+  const conf    = document.getElementById('confPass').value;
+
+  if (!curr) { toast('Ingresa tu contraseña actual', 'warning'); return; }
+  if (!newUser && !newP) { toast('Ingresa al menos un nuevo usuario o contraseña', 'warning'); return; }
+  if (newP && newP !== conf) { toast('Las contraseñas nuevas no coinciden', 'warning'); return; }
+  if (newP && newP.length < 6) { toast('La contraseña debe tener mínimo 6 caracteres', 'warning'); return; }
+
+  const r = await api.put('/api/admin/change-password', {
+    currentPassword: curr,
+    newPassword: newP || undefined,
+    newUsername: newUser || undefined
+  });
+
   if (r.success) {
-    toast('Contraseña actualizada correctamente');
-    document.getElementById('currPass').value = '';
-    document.getElementById('newPass').value = '';
-    document.getElementById('confPass').value = '';
-  } else toast(r.error || 'Error', 'error');
+    toast('Credenciales actualizadas. Cerrando sesión...', 'success');
+    ['currPass', 'newUsername', 'newPass', 'confPass'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.value = '';
+    });
+    setTimeout(() => { clearToken(); location.reload(); }, 2000);
+  } else if (r.usingEnv) {
+    const note = document.getElementById('envVarsNote');
+    if (note) note.style.display = 'block';
+    toast('Usa variables de entorno en Vercel para cambiar credenciales', 'warning');
+  } else {
+    toast(r.error || 'Error al actualizar', 'error');
+  }
 }
 
 // ── GENERIC DELETE ────────────────────────

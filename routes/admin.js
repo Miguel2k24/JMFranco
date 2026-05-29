@@ -17,15 +17,28 @@ const auth = (req, res, next) => {
 
 // ── AUTH ROUTES ───────────────────────────────────────────────────
 router.post('/login', (req, res) => {
-  const db = req.app.locals.db;
   const { username, password } = req.body;
+
+  // Variables de entorno tienen prioridad — son persistentes en Vercel
+  const envUser = process.env.ADMIN_USERNAME;
+  const envPass = process.env.ADMIN_PASSWORD;
+
+  if (envUser && envPass) {
+    if (username === envUser && password === envPass) {
+      const token = jwt.sign({ admin: true, user: username }, JWT_SECRET, JWT_OPTS);
+      return res.json({ success: true, token });
+    }
+    return res.status(401).json({ success: false, error: 'Credenciales incorrectas' });
+  }
+
+  // Sin env vars → usar la base de datos (desarrollo local)
+  const db = req.app.locals.db;
   const admin = db.prepare('SELECT * FROM admin_user WHERE username = ?').get(username);
   if (admin && bcrypt.compareSync(password, admin.password)) {
     const token = jwt.sign({ admin: true, user: username }, JWT_SECRET, JWT_OPTS);
-    res.json({ success: true, token });
-  } else {
-    res.status(401).json({ success: false, error: 'Credenciales incorrectas' });
+    return res.json({ success: true, token });
   }
+  res.status(401).json({ success: false, error: 'Credenciales incorrectas' });
 });
 
 router.post('/logout', (req, res) => res.json({ success: true }));
@@ -297,15 +310,40 @@ router.get('/pdf/generate', auth, async (req, res) => {
   }
 });
 
-// ── CHANGE PASSWORD ───────────────────────────────────────────────
+// ── CHANGE CREDENTIALS ────────────────────────────────────────────
 router.put('/change-password', auth, (req, res) => {
   const db = req.app.locals.db;
-  const { currentPassword, newPassword } = req.body;
+  const { currentPassword, newPassword, newUsername } = req.body;
+
+  // Validar contraseña actual (env var o DB)
+  const envUser = process.env.ADMIN_USERNAME;
+  const envPass = process.env.ADMIN_PASSWORD;
+  const usingEnv = !!(envUser && envPass);
+
+  if (usingEnv) {
+    if (currentPassword !== envPass) {
+      return res.status(400).json({ success: false, error: 'Contraseña actual incorrecta' });
+    }
+    // Con env vars activas: no podemos cambiar desde aquí, indicar al usuario
+    return res.status(400).json({
+      success: false,
+      error: 'Las credenciales están configuradas via variables de entorno. Cámbialas en el dashboard de Vercel (ADMIN_USERNAME / ADMIN_PASSWORD).',
+      usingEnv: true
+    });
+  }
+
+  // Sin env vars → actualizar en la DB (desarrollo local)
   const admin = db.prepare('SELECT * FROM admin_user WHERE id = 1').get();
   if (!bcrypt.compareSync(currentPassword, admin.password)) {
     return res.status(400).json({ success: false, error: 'Contraseña actual incorrecta' });
   }
-  db.prepare('UPDATE admin_user SET password=? WHERE id=1').run(bcrypt.hashSync(newPassword, 10));
+
+  if (newUsername && newUsername.trim()) {
+    db.prepare('UPDATE admin_user SET username=? WHERE id=1').run(newUsername.trim());
+  }
+  if (newPassword && newPassword.length >= 6) {
+    db.prepare('UPDATE admin_user SET password=? WHERE id=1').run(bcrypt.hashSync(newPassword, 10));
+  }
   res.json({ success: true });
 });
 
