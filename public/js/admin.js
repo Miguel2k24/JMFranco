@@ -510,7 +510,8 @@ async function loadCerts() {
         <button class="btn btn-danger" style="font-size:0.72rem;" onclick="deleteItem('/api/admin/certifications/${c.id}',loadCerts)">🗑️</button>
       </div>
     </div>
-  `).join('');
+  `;
+  }).join('');
 }
 
 function openCertModal(data = null) {
