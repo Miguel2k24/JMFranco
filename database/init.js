@@ -3,7 +3,10 @@ const bcrypt = require('bcryptjs');
 const path = require('path');
 const fs = require('fs');
 
-const DB_PATH = path.join(__dirname, 'portfolio.db');
+// En Vercel /var/task es read-only → guardamos en /tmp que sí es escribible
+const IS_VERCEL  = !!process.env.VERCEL;
+const DB_SOURCE  = path.join(__dirname, 'portfolio.db'); // archivo seed (read-only en Vercel)
+const DB_WRITE   = IS_VERCEL ? '/tmp/portfolio.db' : DB_SOURCE;
 
 let _db = null;
 let _initialized = false;
@@ -19,20 +22,31 @@ function toObjects(results) {
   });
 }
 
-// Persiste la base de datos en disco
+// Persiste en /tmp (Vercel) o junto al source (local)
 function save() {
   try {
     const data = _db.export();
-    fs.writeFileSync(DB_PATH, Buffer.from(data));
+    fs.writeFileSync(DB_WRITE, Buffer.from(data));
   } catch (e) {
-    console.error('Error guardando DB:', e.message);
+    // Solo loguear si no es EROFS (lectura en Vercel ya esperada)
+    if (e.code !== 'EROFS') console.error('Error guardando DB:', e.message);
   }
 }
 
 // API compatible con better-sqlite3
 function createInterface(sqljs) {
-  if (fs.existsSync(DB_PATH)) {
-    _db = new sqljs.Database(fs.readFileSync(DB_PATH));
+  // En Vercel: leer desde /tmp si ya existe (tiene cambios de esta sesión),
+  // si no, copiar desde el seed y usar /tmp
+  let readPath = DB_SOURCE;
+  if (IS_VERCEL) {
+    if (!fs.existsSync('/tmp/portfolio.db') && fs.existsSync(DB_SOURCE)) {
+      fs.copyFileSync(DB_SOURCE, '/tmp/portfolio.db');
+    }
+    readPath = '/tmp/portfolio.db';
+  }
+
+  if (fs.existsSync(readPath)) {
+    _db = new sqljs.Database(fs.readFileSync(readPath));
   } else {
     _db = new sqljs.Database();
   }

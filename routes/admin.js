@@ -61,12 +61,22 @@ router.put('/profile', auth, (req, res) => {
   res.json({ success: true });
 });
 
+// Subir foto como archivo
 router.post('/profile/photo', auth, uploadPhoto.single('photo'), (req, res) => {
   const db = req.app.locals.db;
   if (!req.file) return res.status(400).json({ success: false, error: 'Sin archivo' });
   const photo = '/uploads/photos/' + req.file.filename;
   db.prepare('UPDATE profile SET photo=? WHERE id=1').run(photo);
   res.json({ success: true, photo });
+});
+
+// Guardar foto como URL externa (funciona en Vercel sin filesystem)
+router.post('/profile/photo-url', auth, (req, res) => {
+  const db = req.app.locals.db;
+  const { url } = req.body;
+  if (!url) return res.status(400).json({ success: false, error: 'URL requerida' });
+  db.prepare('UPDATE profile SET photo=? WHERE id=1').run(url);
+  res.json({ success: true, photo: url });
 });
 
 // ── SKILLS ────────────────────────────────────────────────────────
@@ -157,8 +167,11 @@ router.get('/projects', auth, (req, res) => {
 
 router.post('/projects', auth, uploadProject.single('image'), (req, res) => {
   const db = req.app.locals.db;
-  const { name, description, url, is_production, tags } = req.body;
-  const image = req.file ? '/uploads/projects/' + req.file.filename : null;
+  const { name, description, url, is_production, tags, image_url } = req.body;
+  // Prioridad: archivo subido > URL externa > null
+  const image = req.file
+    ? '/uploads/projects/' + req.file.filename
+    : (image_url && image_url.trim() ? image_url.trim() : null);
   const r = db.prepare('INSERT INTO projects (name,description,url,image,is_production,tags) VALUES (?,?,?,?,?,?)')
     .run(name, description, url, image, is_production ? 1 : 0, tags);
   res.json({ success: true, id: r.lastInsertRowid });
@@ -166,9 +179,11 @@ router.post('/projects', auth, uploadProject.single('image'), (req, res) => {
 
 router.put('/projects/:id', auth, uploadProject.single('image'), (req, res) => {
   const db = req.app.locals.db;
-  const { name, description, url, is_production, tags, visible } = req.body;
+  const { name, description, url, is_production, tags, visible, image_url } = req.body;
   const existing = db.prepare('SELECT image FROM projects WHERE id=?').get(req.params.id);
-  const image = req.file ? '/uploads/projects/' + req.file.filename : (existing ? existing.image : null);
+  const image = req.file
+    ? '/uploads/projects/' + req.file.filename
+    : (image_url && image_url.trim() ? image_url.trim() : (existing ? existing.image : null));
   db.prepare('UPDATE projects SET name=?,description=?,url=?,image=?,is_production=?,tags=?,visible=? WHERE id=?')
     .run(name, description, url, image, is_production ? 1 : 0, tags, visible ?? 1, req.params.id);
   res.json({ success: true });

@@ -111,12 +111,19 @@
               <div class="photo-placeholder" id="photoPlaceholder">👤</div>
               <img class="photo-preview" id="photoPreview" src="" alt="Foto">
             </div>
-            <div class="input-file-wrap" style="margin-top:0.75rem;padding:0.75rem;">
-              <label for="photoFile">📷 Cambiar foto</label>
+            <!-- URL de imagen (recomendado en Vercel) -->
+            <div style="margin-top:0.75rem;">
+              <label style="font-size:0.72rem;color:var(--text2);display:block;margin-bottom:4px;text-align:left;">URL de foto (recomendado)</label>
+              <input type="url" id="photoUrl" placeholder="https://..." style="font-size:0.8rem;margin-bottom:6px;">
+              <button class="btn btn-blue" style="width:100%;justify-content:center;font-size:0.8rem;" onclick="savePhotoUrl()">Guardar URL</button>
+            </div>
+            <div style="margin:8px 0;font-size:0.7rem;color:var(--muted);">— o subir archivo —</div>
+            <div class="input-file-wrap" style="padding:0.6rem;">
+              <label for="photoFile">📷 Subir imagen</label>
               <input type="file" id="photoFile" accept="image/*" onchange="previewPhoto(this)">
               <div class="file-name" id="photoFileName"></div>
             </div>
-            <button class="btn btn-blue" style="margin-top:0.5rem;width:100%;justify-content:center;" onclick="uploadPhoto()">Subir foto</button>
+            <button class="btn btn-ghost" style="margin-top:0.4rem;width:100%;justify-content:center;font-size:0.78rem;" onclick="uploadPhoto()">Subir archivo</button>
           </div>
           <form id="profileForm">
             <div class="form-grid" style="margin-bottom:1rem;">
@@ -356,7 +363,11 @@
           </div>
         </div>
         <div class="form-group full">
-          <label>Imagen del proyecto (opcional)</label>
+          <label>URL de imagen (recomendado — funciona en Vercel)</label>
+          <input type="url" id="proj_image_url" placeholder="https://i.imgur.com/... o cualquier URL de imagen">
+        </div>
+        <div class="form-group full">
+          <label style="color:var(--muted);">— o subir archivo local —</label>
           <div class="input-file-wrap">
             <label for="proj_image">🖼️ Seleccionar imagen</label>
             <input type="file" id="proj_image" accept="image/*" onchange="showFileName(this,'proj_img_name')">

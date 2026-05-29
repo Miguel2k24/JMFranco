@@ -156,6 +156,10 @@ async function loadProfile() {
     const img = document.getElementById('photoPreview');
     img.src = p.photo;
     img.classList.add('show');
+    // Si es URL externa, mostrarla en el campo
+    if (p.photo.startsWith('http')) {
+      document.getElementById('photoUrl').value = p.photo;
+    }
   }
 }
 
@@ -188,13 +192,25 @@ function previewPhoto(input) {
   reader.readAsDataURL(input.files[0]);
 }
 
+async function savePhotoUrl() {
+  const url = document.getElementById('photoUrl').value.trim();
+  if (!url) { toast('Ingresa una URL de imagen', 'warning'); return; }
+  const r = await api.post('/api/admin/profile/photo-url', { url });
+  if (r.success) {
+    document.getElementById('photoPlaceholder').style.display = 'none';
+    const img = document.getElementById('photoPreview');
+    img.src = url; img.classList.add('show');
+    toast('Foto guardada correctamente');
+  } else toast(r.error || 'Error', 'error');
+}
+
 async function uploadPhoto() {
   const file = document.getElementById('photoFile').files[0];
   if (!file) { toast('Selecciona una foto primero', 'warning'); return; }
   const fd = new FormData();
   fd.append('photo', file);
   const r = await api.postForm('/api/admin/profile/photo', fd);
-  r.success ? toast('Foto actualizada correctamente') : toast(r.error || 'Error al subir foto', 'error');
+  r.success ? toast('Foto actualizada (solo persiste localmente)') : toast(r.error || 'Error al subir foto', 'error');
 }
 
 // ── SKILLS ────────────────────────────────
@@ -369,6 +385,9 @@ function openProjModal(data = null) {
   document.getElementById('proj_is_production').checked = data ? !!data.is_production : false;
   document.getElementById('proj_img_name').textContent = '';
   document.getElementById('proj_image').value = '';
+  // Precargar URL de imagen si existe
+  const imgUrl = data && data.image && data.image.startsWith('http') ? data.image : '';
+  document.getElementById('proj_image_url').value = imgUrl;
   document.getElementById('projModalTitle').textContent = data ? 'Editar Proyecto' : 'Agregar Proyecto';
   openModal('projModal');
 }
@@ -384,8 +403,11 @@ async function saveProject() {
   fd.append('tags', document.getElementById('proj_tags').value);
   fd.append('is_production', document.getElementById('proj_is_production').checked ? '1' : '0');
   fd.append('visible', '1');
+  // URL de imagen externa tiene prioridad sobre archivo
+  const imageUrl = document.getElementById('proj_image_url').value.trim();
+  if (imageUrl) fd.append('image_url', imageUrl);
   const imgFile = document.getElementById('proj_image').files[0];
-  if (imgFile) fd.append('image', imgFile);
+  if (imgFile && !imageUrl) fd.append('image', imgFile);
 
   if (!document.getElementById('proj_name').value) { toast('El nombre es requerido', 'warning'); return; }
 
