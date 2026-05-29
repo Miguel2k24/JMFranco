@@ -646,8 +646,16 @@ async function generatePDF() {
   toast('Generando PDF, por favor espera...', 'success');
   const url = `/api/admin/pdf/generate?includeCerts=${includeCerts}`;
   try {
-    const r = await fetch(url);
-    if (!r.ok) { const j = await r.json(); toast(j.error || 'Error al generar PDF', 'error'); return; }
+    // Incluir el token JWT — fetch directo necesita el header manualmente
+    const token = getToken();
+    const r = await fetch(url, {
+      headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+    });
+    if (!r.ok) {
+      try { const j = await r.json(); toast(j.error || 'Error al generar PDF', 'error'); }
+      catch (_) { toast('Error al generar PDF (status ' + r.status + ')', 'error'); }
+      return;
+    }
     const blob = await r.blob();
     const objUrl = URL.createObjectURL(blob);
     const a = document.createElement('a');
